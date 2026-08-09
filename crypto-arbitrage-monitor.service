@@ -1,0 +1,23 @@
+[Unit]
+Description=Read-only BTC/USDT crypto arbitrage monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=crypto-monitor
+Group=crypto-monitor
+WorkingDirectory=/opt/crypto-arbitrage-monitor/crypto-arbitrage-monitor
+EnvironmentFile=/etc/crypto-arbitrage-monitor/monitor.env
+ExecStart=/opt/crypto-arbitrage-monitor/crypto-arbitrage-monitor/run.sh
+Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/crypto-arbitrage-monitor
+
+[Install]
+WantedBy=multi-user.target
