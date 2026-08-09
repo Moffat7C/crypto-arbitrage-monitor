@@ -37,7 +37,7 @@ BINANCE_BOOK_TICKER_URLS = (
     "https://api3.binance.com/api/v3/ticker/bookTicker?symbol=BTCUSDT",
 )
 BYBIT_TICKER_URL = (
-    "https://api.bybit.com/v5/market/tickers?category=spot&symbol=BTCUSDT"
+    "https://api.bytick.com/v5/market/tickers?category=spot&symbol=BTCUSDT"
 )
 TELEGRAM_TEST_MESSAGE = (
     "🚨 MOFFAT ARBITRAGE BOT TEST — Telegram connection is working."
