@@ -259,18 +259,19 @@ def _parse_bitget_ticker(payload: Any) -> tuple[float, float]:
         _positive_price(row.get("bidPr"), "Bitget best bid"),
         _positive_price(row.get("askPr"), "Bitget best ask"),
 
-    )
-
 def fetch_binance_quote(timeout_seconds: float) -> Quote:
     payload = _request_json_with_fallbacks(
         BINANCE_BOOK_TICKER_URLS,
         timeout_seconds=timeout_seconds,
     )
     bid, ask = _parse_binance_book_ticker(payload)
+
     return Quote(
         exchange="Binance Spot",
         bid=bid,
+        ask=ask,
         observed_at=datetime.now(timezone.utc),
+  
     )
 def fetch_bitget_quote(timeout_seconds: float) -> Quote:
     payload = _request_json(
