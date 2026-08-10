@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Read-only BTC/USDT arbitrage monitor using direct public exchange data.
 
-This program only reads public Binance Spot and Bybit Spot order-book data and
+This program only reads public Binance Spot and Bitget Spot order-book data and
 sends Telegram messages. It never calls a trading endpoint and never places
 orders.
+"""
+
+from __future__ import annotations
 """
 
 from __future__ import annotations
