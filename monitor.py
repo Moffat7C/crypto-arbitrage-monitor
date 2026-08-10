@@ -229,24 +229,37 @@ def _parse_binance_book_ticker(payload: Any) -> tuple[float, float]:
         _positive_price(payload.get("askPrice"), "Binance best ask"),
     )
 
-
 def _parse_bitget_ticker(payload: Any) -> tuple[float, float]:
     if not isinstance(payload, dict):
-        raise ExchangeDataError("Bybit returned an unexpected ticker payload")
-    if payload.get("retCode") not in (None, 0):
         raise ExchangeDataError(
-            f"Bybit returned error {payload.get('retCode')}: {payload.get('retMsg', 'unknown error')}"
+            "Bitget returned an unexpected ticker payload"
         )
-    result = payload.get("result")
-    rows = result.get("list") if isinstance(result, dict) else None
-    if not isinstance(rows, list) or not rows or not isinstance(rows[0], dict):
-        raise ExchangeDataError("Bybit returned no BTCUSDT spot ticker")
-    row = rows[0]
-    return (
-        _positive_price(row.row.get("bidPr") "Bitget best bid"),
-        _positive_price(row.get("askPr")"Bitget ask"),
-    )
 
+    if payload.get("code") != "00000":
+        raise ExchangeDataError(
+            f"Bitget returned error {payload.get('code')}: "
+            f"{payload.get('msg', 'unknown error')}"
+        )
+
+    rows = payload.get("data")
+
+    if not isinstance(rows, list) or not rows:
+        raise ExchangeDataError(
+            "Bitget returned no BTCUSDT spot ticker"
+        )
+
+    row = rows[0]
+
+    if not isinstance(row, dict):
+        raise ExchangeDataError(
+            "Bitget returned an invalid ticker row"
+        )
+
+    return (
+        _positive_price(row.get("bidPr"), "Bitget best bid"),
+        _positive_price(row.get("askPr"), "Bitget best ask"),
+
+    )
 
 def fetch_binance_quote(timeout_seconds: float) -> Quote:
     payload = _request_json_with_fallbacks(
@@ -257,24 +270,22 @@ def fetch_binance_quote(timeout_seconds: float) -> Quote:
     return Quote(
         exchange="Binance Spot",
         bid=bid,
-        ask=ask,
         observed_at=datetime.now(timezone.utc),
     )
-
-
-def fetch_bybit_quote(timeout_seconds: float) -> Quote:
+def fetch_bitget_quote(timeout_seconds: float) -> Quote:
     payload = _request_json(
-        BYBIT_TICKER_URL,
+        BITGET_TICKER_URL,
         timeout_seconds=timeout_seconds,
     )
-    bid, ask = _parse_bybit_ticker(payload)
+
+    bid, ask = _parse_bitget_ticker(payload)
+
     return Quote(
-        exchange="Bybit Spot",
+        exchange="Bitget Spot",
         bid=bid,
         ask=ask,
         observed_at=datetime.now(timezone.utc),
     )
-
 
 def _probe_endpoint(
     exchange: str,
@@ -323,13 +334,13 @@ def probe_market_data(timeout_seconds: float) -> tuple[MarketDataProbe, ...]:
             timeout_seconds,
         ),
         _probe_endpoint(
-            "Bybit Spot",
-            BYBIT_TICKER_URL,
-            _parse_bybit_ticker,
-            timeout_seconds,
+            "Bitget Spot",
+            BITGET_TICKER_URL,
+            _parse_bitget_ticker,
+            timeout_seconds,   
+
         ),
     )
-
 
 def print_market_data_test(timeout_seconds: float) -> int:
     probes = probe_market_data(timeout_seconds)
@@ -467,8 +478,9 @@ class AlertTracker:
 def poll_quotes(config: Config) -> dict[str, Quote]:
     fetchers: dict[str, Callable[[float], Quote]] = {
         "Binance Spot": fetch_binance_quote,
-        "Bybit Spot": fetch_bybit_quote,
+        "Bitget Spot": fetch_bitget_quote,
     }
+    
     quotes: dict[str, Quote] = {}
     with ThreadPoolExecutor(max_workers=2, thread_name_prefix="quote") as executor:
         futures = {
@@ -557,7 +569,7 @@ def run_monitor(config: Config, *, once: bool, send_alerts: bool) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Monitor read-only BTC/USDT arbitrage between Binance and Bybit."
+        description="Monitor read-only BTC/USDT arbitrage between Binance and Bitget."
     )
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument(
@@ -573,7 +585,7 @@ def parse_args() -> argparse.Namespace:
     mode.add_argument(
         "--test-market-data",
         action="store_true",
-        help="print Binance and Bybit public quote status and bid/ask, then exit",
+        help="Print Binance and Bitget public quote status and bid/ask, then exit",
     )
     parser.add_argument(
         "--no-telegram",
@@ -622,7 +634,7 @@ def main() -> int:
         return 0
 
     LOGGER.info(
-        "Starting read-only %s monitor via direct public Binance/Bybit APIs; "
+        "Starting read-only %s monitor via direct public Binance/Bitget APIs: "
         "buy fee %.2f%%, sell fee %.2f%%; "
         "threshold %.3f%%; poll interval %.1fs",
         SYMBOL,
