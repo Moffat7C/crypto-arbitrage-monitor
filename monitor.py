@@ -36,8 +36,8 @@ BINANCE_BOOK_TICKER_URLS = (
     "https://api2.binance.com/api/v3/ticker/bookTicker?symbol=BTCUSDT",
     "https://api3.binance.com/api/v3/ticker/bookTicker?symbol=BTCUSDT",
 )
-BYBIT_TICKER_URL = (
-    "https://api.bytick.com/v5/market/tickers?category=spot&symbol=BTCUSDT"
+BITGET_TICKER_URL = (
+    https://api.bitget.com/api/v2/spot/market/tickers?symbol=BTCUSDT
 )
 TELEGRAM_TEST_MESSAGE = (
     "🚨 MOFFAT ARBITRAGE BOT TEST — Telegram connection is working."
@@ -230,7 +230,7 @@ def _parse_binance_book_ticker(payload: Any) -> tuple[float, float]:
     )
 
 
-def _parse_bybit_ticker(payload: Any) -> tuple[float, float]:
+def _parse_bitget_ticker(payload: Any) -> tuple[float, float]:
     if not isinstance(payload, dict):
         raise ExchangeDataError("Bybit returned an unexpected ticker payload")
     if payload.get("retCode") not in (None, 0):
@@ -243,8 +243,8 @@ def _parse_bybit_ticker(payload: Any) -> tuple[float, float]:
         raise ExchangeDataError("Bybit returned no BTCUSDT spot ticker")
     row = rows[0]
     return (
-        _positive_price(row.get("bid1Price"), "Bybit best bid"),
-        _positive_price(row.get("ask1Price"), "Bybit best ask"),
+        _positive_price(row.row.get("bidPr") "Bitget best bid"),
+        _positive_price(row.get("askPr")"Bitget ask"),
     )
 
 
